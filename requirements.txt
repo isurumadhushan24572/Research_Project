@@ -1,0 +1,7 @@
+streamlit
+pandas
+pyarrow
+azure-storage-file-datalake
+sqlalchemy
+pyodbc
+python-dotenv
