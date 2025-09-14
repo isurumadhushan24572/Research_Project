@@ -5,3 +5,4 @@ azure-storage-file-datalake
 sqlalchemy
 pyodbc
 python-dotenv
+adlfs
