@@ -1,0 +1,26 @@
+[
+  {"id": "R1", "name": "min_Service", "condition": "years_service >= 3", "weight": 10,
+   "reason": "Completed minimum service (5>=3 years)"},
+  {"id": "R2", "name": "max_Service", "condition": "years_service >= 10", "weight": 40,
+   "reason": "Completed max service (>=10 years)"},
+  {"id": "R3", "name": "DistanceGT10", "condition": "distance_km > 30", "weight": 10,
+   "reason": "Distance > 10 km"},
+  {"id": "R4", "name": "DistanceGT20", "condition": "distance_km > 30", "weight": 20,
+   "reason": "Distance 20> 10 km"},
+  {"id": "R5", "name": "DistanceGT30", "condition": "distance_km > 30", "weight": 40,
+   "reason": "Distance 30 km"},
+  {"id": "R6", "name": "Medical", "condition": "special_reasons contains 'Medical'", "weight": 50,
+   "reason": "Medical grounds"}, 
+  {"id": "R7", "name": "Spouse", "condition": "special_reasons contains 'Spouse'", "weight": 40,
+   "reason": "Spouse employment"},
+  {"id": "R8", "name": "Child", "condition": "special_reasons contains 'Child'", "weight": 30,
+   "reason": "Child education needs"},
+  {"id": "R8", "name": "Personal", "condition": "Personal Reasons", "weight": 20,
+   "reason": "Child education needs"}  
+]
+
+
+
+  
+
+  
