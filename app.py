@@ -1,11 +1,12 @@
 import streamlit as st
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, text, bindparam
 from dotenv import load_dotenv
 import os
 import pandas as pd
 from datetime import datetime
 import adlfs
 import re
+import requests
 
 # --- Load env vars ---
 load_dotenv()
@@ -17,6 +18,7 @@ DRIVER = "ODBC Driver 17 for SQL Server"
 AZURE_STORAGE_ACCOUNT = os.getenv("AZURE_STORAGE_ACCOUNT")
 AZURE_STORAGE_KEY = os.getenv("AZURE_STORAGE_KEY")
 BRONZE_CONTAINER = os.getenv("BRONZE_CONTAINER")
+GOOGLE_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
 
 # --- Synapse engine ---
 engine = None
@@ -33,12 +35,11 @@ except Exception as e:
 st.set_page_config(page_title="Teacher Portal", page_icon="📚", layout="centered")
 
 # --- Session state ---
-if "logged_in" not in st.session_state:
-    st.session_state.logged_in = False
-if "teacher_name" not in st.session_state:
-    st.session_state.teacher_name = None
-if "teacher_nic" not in st.session_state:
-    st.session_state.teacher_nic = None
+for key in ["logged_in", "teacher_name", "teacher_nic", "teacher_title", "selected_subjects"]:
+    if key not in st.session_state:
+        st.session_state[key] = None if key != "logged_in" else False
+if st.session_state.selected_subjects is None:
+    st.session_state.selected_subjects = []
 
 # --- Helper: get teacher info ---
 def get_teacher(nic: str, birthdate: str):
@@ -48,13 +49,13 @@ def get_teacher(nic: str, birthdate: str):
     try:
         with engine.connect() as conn:
             query = text("""
-                SELECT TOP 1 Teacher_Name, NIC
+                SELECT TOP 1 Teacher_Name, NIC, Title
                 FROM gold.ext_teacher
                 WHERE NIC = :nic AND Birth_Date = :birthdate
             """)
             result = conn.execute(query, {"nic": nic, "birthdate": birthdate}).fetchone()
             if result:
-                return {"name": result.Teacher_Name, "nic": result.NIC}
+                return {"name": result.Teacher_Name, "nic": result.NIC, "title": result.Title}
             return None
     except Exception:
         return None
@@ -72,6 +73,35 @@ def get_schools():
         st.error(f"Error loading schools: {e}")
         return []
 
+# --- Helper: get subject list (optimized) ---
+def get_subjects(section: list):
+    """
+    Fetch distinct subjects for the selected section(s),
+    ordered by SECTION then SUBJECT.
+    """
+    if engine is None or not section:
+        return {}
+    try:
+        with engine.connect() as conn:
+            query = text("""
+                SELECT DISTINCT SECTION, SUBJECT
+                FROM gold.ext_subject
+                WHERE SECTION IN :section
+                ORDER BY SECTION, SUBJECT
+            """).bindparams(
+                bindparam("section", expanding=True)
+            )
+            result = conn.execute(query,{"section": section}).fetchall()
+
+            subjects_by_section = {}
+            for row in result:
+                subjects_by_section.setdefault(row.SECTION, []).append(row.SUBJECT)
+
+            return subjects_by_section
+    except Exception as e:
+        st.error(f"Error loading subject: {e}")
+        return {}
+
 # --- Login form ---
 if not st.session_state.logged_in:
     st.title("🔐 Teacher Login")
@@ -79,14 +109,14 @@ if not st.session_state.logged_in:
         nic = st.text_input("Enter NIC")
         birthdate = st.text_input("Enter Birthdate (YYYY-MM-DD)", type="password")
         submit = st.form_submit_button("Login")
-
         if submit:
             teacher = get_teacher(nic, birthdate)
             if teacher:
                 st.session_state.logged_in = True
                 st.session_state.teacher_name = teacher["name"]
                 st.session_state.teacher_nic = teacher["nic"]
-                st.success(f"✅ Welcome {teacher['name']}! Redirecting...")
+                st.session_state.teacher_title = teacher["title"]
+                st.success(f"✅ Welcome {teacher['title']} {teacher['name']}! Redirecting...")
                 st.rerun()
             else:
                 st.error("❌ Invalid NIC or Birthdate")
@@ -94,20 +124,41 @@ if not st.session_state.logged_in:
 # --- Submission form ---
 else:
     st.title("📄 Teacher Form Submission")
-    st.write(f"Welcome, **{st.session_state.teacher_name}** 👋")
+    st.write(f"Welcome, **{st.session_state.teacher_title} {st.session_state.teacher_name}** 👋")
 
     schools = get_schools()
 
+    
+    # --- Section logic ---
+    
+    section_options = ["Primary", "Secondary", "A/L_General", "A/L_Arts", "A/L_Commerce", "A/L_Technology", "A/L_Science"]
+    section = st.multiselect("Select Section(s)", section_options)
+
+    # --- Subjects (grouped by section with multiselects) ---
+    subjects_by_section = get_subjects(section)
+    # st.subheader("Select Subjects")
+    selected_subjects = []
+
+    for sec, subs in subjects_by_section.items():
+        chosen = st.multiselect(
+            f"{sec} Subjects",
+            options=subs,
+            default=[],
+            key=f"subj_multi_{sec}"
+        )
+        selected_subjects.extend(chosen)
+
+    st.session_state.selected_subjects = selected_subjects
+
     with st.form("submission_form"):
-        subject = st.text_input("Subject (comma-separated)")
+    # --- Other form fields ---
         address = st.text_input("Address")
-        # notes = st.text_area("Reasons for transfer (comma-separated)")
-        notes_options = ["Health","Hardship","Family", "Personal"]
-        Reason = st.multiselect("Reasons for transfer", notes_options)
+        # notes_options = ["Health", "Hardship", "Family", "Personal"]
+        Reason = st.text_area("Reasons for transfer")
 
         # --- School Preferences ---
         school_choices = []
-        for i in range(5):  # max 5 preferences
+        for i in range(5):
             choice = st.selectbox(
                 f"School Preference {i+1}",
                 ["-- None --"] + schools,
@@ -116,42 +167,54 @@ else:
             if choice != "-- None --":
                 school_choices.append(choice)
 
+        # Form submit button
         submitted = st.form_submit_button("Submit")
 
         if submitted:
-            # Validate required fields
-            if not subject or not address :
+            if not st.session_state.selected_subjects or not address or not Reason.strip():
                 st.error("❌ Please fill all required fields before submitting.")
             elif len(school_choices) == 0:
                 st.error("❌ Please select at least one school.")
             elif len(school_choices) != len(set(school_choices)):
                 st.error("❌ Duplicate schools selected. Each preference must be unique.")
             else:
-                # Prepare data
-                current_month = datetime.now().strftime("%Y%m")
-                nic_safe = re.sub(r'[^a-zA-Z0-9_-]', '_', st.session_state.teacher_nic)
-                file_name = f"{nic_safe}_{current_month}.parquet"
-                bronze_path = f"abfs://{BRONZE_CONTAINER}@{AZURE_STORAGE_ACCOUNT}.dfs.core.windows.net/Vacancy_Details/"
+                # ✅ Validate address using Google Maps API
+                url = "https://maps.googleapis.com/maps/api/geocode/json"
+                params = {"address": address, "key": GOOGLE_API_KEY}
+                response = requests.get(url, params=params).json()
 
-                fs = adlfs.AzureBlobFileSystem(account_name=AZURE_STORAGE_ACCOUNT,
-                                               account_key=AZURE_STORAGE_KEY)
-
-                # Check if already exists
-                if fs.exists(f"{bronze_path}{file_name}"):
-                    st.error("❌ You have already submitted this month. Duplicate submissions are not allowed.")
+                if response["status"] != "OK":
+                    st.error("❌ Invalid address. Please enter a valid location.")
                 else:
-                    data = pd.DataFrame([{
-                        "NIC": st.session_state.teacher_nic,
-                        "Teacher_Name": st.session_state.teacher_name,
-                        "Subjects": subject,
-                        "Address": address,
-                        "School_Preferences": ",".join(school_choices),
-                        "Reason": ",".join(Reason),
-                        "Submitted_At": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                    }])
+                    validated_address = response["results"][0]["formatted_address"]
 
-                    # Save to Bronze
-                    data.to_parquet(f"{bronze_path}{file_name}", index=False, filesystem=fs)
+                    # ✅ Unique filename per NIC per month
+                    current_month = datetime.now().strftime("%Y%m")
+                    nic_safe = re.sub(r'[^a-zA-Z0-9_-]', '_', st.session_state.teacher_nic)
+                    file_name = f"{nic_safe}_{current_month}.parquet"
+                    bronze_path = f"abfs://{BRONZE_CONTAINER}@{AZURE_STORAGE_ACCOUNT}.dfs.core.windows.net/Vacancy_Details/"
 
-                    st.success("✅ Form submitted and saved successfully!")
-                    st.write(f"**Saved as:** {file_name}")
+                    fs = adlfs.AzureBlobFileSystem(
+                        account_name=AZURE_STORAGE_ACCOUNT,
+                        account_key=AZURE_STORAGE_KEY
+                    )
+
+                    if fs.exists(f"{bronze_path}{file_name}"):
+                        st.error("❌ You have already submitted this month. Duplicate submissions are not allowed.")
+                    else:
+                        # ✅ Save to Parquet
+                        data = pd.DataFrame([{
+                            "NIC": st.session_state.teacher_nic,
+                            "Teacher_Name": st.session_state.teacher_name,
+                            "SECTION": ",".join(section),
+                            "Subjects": ",".join(st.session_state.selected_subjects),
+                            "Validated_Address": validated_address,
+                            "School_Preferences": ",".join(school_choices),
+                            "Reason": Reason,
+                            "Submitted_At": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                        }])
+
+                        data.to_parquet(f"{bronze_path}{file_name}", index=False, filesystem=fs)
+
+                        st.success("✅ Form submitted and saved successfully!")
+                    
