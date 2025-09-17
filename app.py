@@ -206,7 +206,7 @@ else:
                         data = pd.DataFrame([{
                             "NIC": st.session_state.teacher_nic,
                             "Teacher_Name": st.session_state.teacher_name,
-                            "SECTION": ",".join(section),
+                            "Section": ",".join(section),
                             "Subjects": ",".join(st.session_state.selected_subjects),
                             "Validated_Address": validated_address,
                             "School_Preferences": ",".join(school_choices),
