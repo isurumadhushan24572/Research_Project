@@ -1,141 +1,140 @@
- [
-    {
-        "column": "Current_School_Service_Years",
-        "condition": ">= 9",
-        "score": 40,
-        "reason": "Completed Maximum service (Current school service >=9 years)"
-    },
-    {
-        "column": "Current_School_Service_Years",
-        "condition": ">= 5",
-        "score": 20,
-        "reason": "Completed Minimum service (Current school service >=5 years)"
-    },
-    {
-        "column": "Current_School_Service_Years",
-        "condition": ">= 3",
-        "score": 10,
-        "reason": "Completed Minimum service (Current school service >=3 years)"
-    },
-    {
-        "column": "Age",
-        "condition": ">= 50",
-        "score": 80,
-        "reason": "Age 50 or above"
-    },
-    {
-        "column": "Bus_Route_Distance_KM",
-        "condition": ">= 30",
-        "score": 40,
-        "reason": "Distance >= 30 km"
-    },
-    {
-        "column": "Bus_Route_Distance_KM",
-        "condition": ">= 20",
-        "score": 20,
-        "reason": "Distance >= 20 km"
-    },
-    {
-        "column": "Bus_Route_Distance_KM",
-        "condition": ">= 10",
-        "score": 10,
-        "reason": "Distance >= 10 km"
-    },
-    {
-        "column": "Position",
-        "condition": "=='Deputy Principal'",
-        "score": 40,
-        "reason": "Current Position is Deputy Principal"
-    },
-    {
-        "column": "Position",
-        "condition": "=='Assistant Principal'",
-        "score": 20,
-        "reason": "Current Position is Assistant Principal"
-    },
-    {
-        "column": "Position",
-        "condition": "=='Section Head'",
-        "score": 10,
-        "reason": "Current Position is Section Head"
-    },
-        {
-        "column": "Position",
-        "condition": "=='Grade Head'",
-        "score": 10,
-        "reason": "Current Position is Grade Head"
-    },
-    {
-        "column": "Service_Years",
-        "condition": "value",
-        "score": "Service_Years", 
-        "reason": "Years of total service count directly as score"
-    },
-    {
-        "column": "Highest_Edu_Qualification",
-        "condition": "=='O/L'",
-        "score": 10,
-        "reason": "Highest_Edu_Qualification is O/L"
-    },
-    {
-        "column": "Highest_Edu_Qualification",
-        "condition": "=='A/L'",
-        "score": 20,
-        "reason": "Highest_Edu_Qualification is A/L "
-    },
-    {
-        "column": "Highest_Edu_Qualification",
-        "condition": "=='PG Dip'",
-        "score": 30,
-        "reason": "Highest_Edu_Qualification is PG Dip"
-    },
-    {
-        "column": "Highest_Edu_Qualification",
-        "condition": "=='PG Degree Or Above'",
-        "score": 40,
-        "reason": "Highest_Edu_Qualification is PG Degree Or Above"
-    },
-    {
-        "column": "Highest_Prof_Qualification",
-        "condition": "=='Currently Studying for Professional Qualification'",
-        "score": 10,
-        "reason": "Highest_Prof_Qualification is Currently Studying for Professional Qualification"
-    },
-    {
-        "column": "Highest_Prof_Qualification",
-        "condition": "=='Teacher Training Certificate'",
-        "score": 20,
-        "reason": "Highest_Prof_Qualification is Teacher Training Certificate"
-    },
-    {
-        "column": "Highest_Prof_Qualification",
-        "condition": "=='Other Diploma / Higher Diploma'",
-        "score": 30,
-        "reason": "Highest_Prof_Qualification is Other Diploma / Higher Diploma"
-    },   
-    {
-        "column": "Highest_Prof_Qualification",
-        "condition": "=='National Teacher Education Science'",
-        "score": 40,
-        "reason": "Highest_Prof_Qualification is National Teacher Education Science"
-    },  
-    {
-        "column": "Highest_Prof_Qualification",
-        "condition": "=='Bachelor of Education (B.Ed.)'",
-        "score": 50,
-        "reason": "Highest_Prof_Qualification is National Teacher Education Science"
-    },
-    {
-        "column": "Highest_Prof_Qualification",
-        "condition": "=='Postgraduate Diploma in Education (PG Dip Ed.)'",
-        "score": 60,
-        "reason": "Highest_Prof_Qualification is Post Graduate Diploma in Education (PGDE)"
-    },
-    {
-        "column": "Highest_Prof_Qualification",
-        "condition": "=='Master of Education (MEd) or Higher'",
-        "score": 70,
-        "reason": "Highest_Prof_Qualification is Master of Education (MEd) or Higher"
-    }
-    
+[
+  {
+    "column": "Current_School_Service_Years",
+    "condition": ">= 9",
+    "score": 40,
+    "reason": "Completed Maximum service (Current school service >= 9 years)"
+  },
+  {
+    "column": "Current_School_Service_Years",
+    "condition": ">= 5 AND < 9",
+    "score": 20,
+    "reason": "Completed Minimum service (Current school service between 5 and 8 years)"
+  },
+  {
+    "column": "Current_School_Service_Years",
+    "condition": ">= 3 AND < 5",
+    "score": 10,
+    "reason": "Completed Minimum service (Current school service between 3 and 4 years)"
+  },
+  {
+    "column": "Age",
+    "condition": ">= 50",
+    "score": 80,
+    "reason": "Age 50 or above"
+  },
+  {
+    "column": "Bus_Route_Distance_KM",
+    "condition": ">= 30 AND <50",
+    "score": 40,
+    "reason": "between 30 and 50 km"
+  },
+  {
+    "column": "Bus_Route_Distance_KM",
+    "condition": ">= 20 AND < 30",
+    "score": 20,
+    "reason": "Distance between 20 and 29 km"
+  },
+  {
+    "column": "Bus_Route_Distance_KM",
+    "condition": ">= 10 AND < 20",
+    "score": 10,
+    "reason": "Distance between 10 and 19 km"
+  },
+  {
+    "column": "Position",
+    "condition": "=='Deputy Principal'",
+    "score": 40,
+    "reason": "Current Position is Deputy Principal"
+  },
+  {
+    "column": "Position",
+    "condition": "=='Assistant Principal'",
+    "score": 20,
+    "reason": "Current Position is Assistant Principal"
+  },
+  {
+    "column": "Position",
+    "condition": "=='Section Head'",
+    "score": 10,
+    "reason": "Current Position is Section Head"
+  },
+  {
+    "column": "Position",
+    "condition": "=='Grade Head'",
+    "score": 10,
+    "reason": "Current Position is Grade Head"
+  },
+  {
+    "column": "Service_Years",
+    "condition": "value",
+    "score": "Service_Years",
+    "reason": "Years of total service counted directly as score"
+  },
+  {
+    "column": "Highest_Edu_Qualification",
+    "condition": "=='O/L'",
+    "score": 10,
+    "reason": "Highest_Edu_Qualification is O/L"
+  },
+  {
+    "column": "Highest_Edu_Qualification",
+    "condition": "=='A/L'",
+    "score": 20,
+    "reason": "Highest_Edu_Qualification is A/L"
+  },
+  {
+    "column": "Highest_Edu_Qualification",
+    "condition": "=='PG Dip'",
+    "score": 30,
+    "reason": "Highest_Edu_Qualification is PG Dip"
+  },
+  {
+    "column": "Highest_Edu_Qualification",
+    "condition": "=='PG Degree Or Above'",
+    "score": 40,
+    "reason": "Highest_Edu_Qualification is PG Degree Or Above"
+  },
+  {
+    "column": "Highest_Prof_Qualification",
+    "condition": "=='Currently Studying for Professional Qualification'",
+    "score": 10,
+    "reason": "Highest_Prof_Qualification is Currently Studying for Professional Qualification"
+  },
+  {
+    "column": "Highest_Prof_Qualification",
+    "condition": "=='Teacher Training Certificate'",
+    "score": 20,
+    "reason": "Highest_Prof_Qualification is Teacher Training Certificate"
+  },
+  {
+    "column": "Highest_Prof_Qualification",
+    "condition": "=='Other Diploma / Higher Diploma'",
+    "score": 30,
+    "reason": "Highest_Prof_Qualification is Other Diploma / Higher Diploma"
+  },
+  {
+    "column": "Highest_Prof_Qualification",
+    "condition": "=='National Teacher Education Science'",
+    "score": 40,
+    "reason": "Highest_Prof_Qualification is National Teacher Education Science"
+  },
+  {
+    "column": "Highest_Prof_Qualification",
+    "condition": "=='Bachelor of Education (B.Ed.)'",
+    "score": 50,
+    "reason": "Highest_Prof_Qualification is Bachelor of Education (B.Ed.)"
+  },
+  {
+    "column": "Highest_Prof_Qualification",
+    "condition": "=='Postgraduate Diploma in Education (PG Dip Ed.)'",
+    "score": 60,
+    "reason": "Highest_Prof_Qualification is Postgraduate Diploma in Education (PG Dip Ed.)"
+  },
+  {
+    "column": "Highest_Prof_Qualification",
+    "condition": "=='Master of Education (MEd) or Higher'",
+    "score": 70,
+    "reason": "Highest_Prof_Qualification is Master of Education (MEd) or Higher"
+  }
 ]
