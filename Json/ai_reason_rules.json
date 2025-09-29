@@ -1,46 +1,58 @@
-[
-  { 
-    "class": "Medical", 
-    "min_score": 80, 
+{
+  "Medical": {
+    "min_score": 80,
     "max_score": 100,
-    "description": "Cases where the teacher or an immediate family member faces serious health or medical conditions that require special care, treatment, or relocation to a suitable area with better medical facilities.", 
+    "description": "Cases where the teacher or an immediate family member faces serious health or medical conditions that require special care, treatment, or relocation to a suitable area with better medical facilities.",
     "reason_template": "High priority due to medical condition requiring special attention or access to healthcare facilities.",
     "explanation_template": "Final Score: {score} → Classified as {class}. {reason_template}"
   },
-
-  { 
-    "class": "Children", 
-    "min_score": 60, 
-    "max_score": 80,  
-    "description": "Situations where transfer is requested to support children’s education, safety, or well-being, such as moving closer to schools, providing stability, or addressing special educational needs.", 
+  "Children": {
+    "min_score": 40,
+    "max_score": 60,
+    "description": "Situations where transfer is requested to support children’s education, safety, or well-being, such as moving closer to schools, providing stability, or addressing special educational needs.",
     "reason_template": "Important consideration due to children's education and well-being needs.",
     "explanation_template": "Final Score: {score} → Classified as {class}. {reason_template}"
   },
-
-  { 
-    "class": "Family", 
-    "min_score": 50, 
-    "max_score": 70,  
-    "description": "Transfer requests motivated by family-related obligations such as joining a spouse who has been transferred, supporting dependents, or maintaining family unity.", 
+  "Spouse": {
+    "min_score": 10,
+    "max_score": 30,
+    "description": "Transfer requests motivated by family-related obligations such as joining a spouse who has been transferred, supporting dependents, or maintaining family unity.",
     "reason_template": "Family obligations such as spouse transfer or caregiving responsibility make this request significant.",
     "explanation_template": "Final Score: {score} → Classified as {class}. {reason_template}"
   },
-
-  { 
-    "class": "Parents", 
-    "min_score": 40, 
-    "max_score": 60,  
-    "description": "Cases where the teacher seeks transfer to care for elderly or dependent parents, ensuring their health, safety, and emotional well-being.", 
+  "Parents": {
+    "min_score": 40,
+    "max_score": 60,
+    "description": "Cases where the teacher seeks transfer to care for elderly or dependent parents, ensuring their health, safety, and emotional well-being.",
     "reason_template": "Transfer motivated by the need to provide care and support for elderly or dependent parents.",
     "explanation_template": "Final Score: {score} → Classified as {class}. {reason_template}"
   },
-
-  { 
-    "class": "Personal", 
-    "min_score": 10, 
-    "max_score": 30,  
-    "description": "Other non-critical personal reasons for transfer, such as preference for location, lifestyle, convenience, or general well-being, which do not fall into higher priority categories.", 
+  "Transportation": {
+    "min_score": 40,
+    "max_score": 60,
+    "description": "Requests where travel difficulties, commuting distance, or lack of reliable transportation make the current school assignment challenging.",
+    "reason_template": "Significant difficulty due to commuting challenges or transportation issues.",
+    "explanation_template": "Final Score: {score} → Classified as {class}. {reason_template}"
+  },
+  "Professional": {
+    "min_score": 30,
+    "max_score": 50,
+    "description": "Transfers related to professional reasons such as career development, teaching specific subjects, promotions, or assignments requiring special expertise.",
+    "reason_template": "Transfer requested for professional growth, specific teaching requirements, or career advancement.",
+    "explanation_template": "Final Score: {score} → Classified as {class}. {reason_template}"
+  },
+  "Personal": {
+    "min_score": 10,
+    "max_score": 30,
+    "description": "Other non-critical personal reasons for transfer, such as preference for location, lifestyle, convenience, or general well-being, which do not fall into higher priority categories.",
     "reason_template": "Personal preference or convenience; less critical compared to medical, family, or childcare reasons.",
     "explanation_template": "Final Score: {score} → Classified as {class}. {reason_template}"
+  },
+  "Brothers": {
+    "min_score": 10,
+    "max_score": 30,
+    "description": "Cases where the teacher requests a transfer to be closer to a brother who requires support, such as due to health issues, shared family responsibilities, or assistance in managing family matters.",
+    "reason_template": "Transfer motivated by the need to provide support and care for a brother facing health, family, or personal challenges.",
+    "explanation_template": "Final Score: {score} → Classified as {class}. {reason_template}"
   }
-]
+}
