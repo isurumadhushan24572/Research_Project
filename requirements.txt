@@ -6,3 +6,6 @@ sqlalchemy
 pyodbc
 python-dotenv
 adlfs
+pandas
+googletrans
+openpyxl
