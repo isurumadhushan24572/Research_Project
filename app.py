@@ -51,7 +51,7 @@ def get_teacher(nic: str, birthdate: str):
             query = text("""
                 SELECT TOP 1 Teacher_Name, NIC, Title
                 FROM gold.ext_teacher
-                WHERE NIC = :nic AND Birth_Date = :birthdate
+                WHERE NIC = :nic AND Birth_Date = :birthdate AND Type = 'Provintial'
             """)
             result = conn.execute(query, {"nic": nic, "birthdate": birthdate}).fetchone()
             if result:
@@ -66,7 +66,7 @@ def get_schools():
         return []
     try:
         with engine.connect() as conn:
-            query = text("SELECT DISTINCT School_Name FROM gold.ext_school")
+            query = text("SELECT DISTINCT School_Name FROM gold.ext_school WHERE Type = 'Provintial'")
             result = conn.execute(query).fetchall()
             return [row.School_Name for row in result]
     except Exception as e:
