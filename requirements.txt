@@ -9,3 +9,4 @@ adlfs
 pandas
 googletrans
 openpyxl
+
