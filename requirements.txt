@@ -9,4 +9,6 @@ adlfs
 pandas
 googletrans
 openpyxl
+msodbcsql17
+unixodbc
 
