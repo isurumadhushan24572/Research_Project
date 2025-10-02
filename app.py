@@ -32,7 +32,7 @@ except Exception as e:
     st.error(f"❌ Could not create DB engine: {e}")
 
 # --- Streamlit page config ---
-st.set_page_config(page_title="Teacher Portal", page_icon="📚", layout="centered")
+st.set_page_config(page_title="Teacher Portal", page_icon="👨‍🏫", layout="centered")
 
 # --- Session state ---
 for key in ["logged_in", "teacher_name", "teacher_nic", "teacher_title", "selected_subjects"]:

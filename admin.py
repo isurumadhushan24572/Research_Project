@@ -35,7 +35,7 @@ def validate_admin(nic: str, birthdate: str) -> bool:
     """Check if NIC + BirthDate exists in gold.admin"""
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT 1 FROM gold.ext_teacher WHERE NIC = ? AND Birth_Date = ?", (nic, birthdate))
+    cursor.execute("SELECT 1 FROM gold.ext_admin WHERE NIC = ? AND Birth_Date = ?", (nic, birthdate))
     row = cursor.fetchone()
     conn.close()
     return row is not None
@@ -95,7 +95,7 @@ def format_eligibility(df: pd.DataFrame) -> pd.DataFrame:
 # ---------------------------
 # Streamlit Page Config
 # ---------------------------
-st.set_page_config(page_title="Teacher Transfer Dashboard", page_icon="📚", layout="wide")
+st.set_page_config(page_title="Teacher Transfer Dashboard", page_icon="👨‍⚖️", layout="wide")
 
 # ---------------------------
 # Session State
@@ -111,7 +111,7 @@ if not st.session_state.logged_in:
     st.write("Please enter your NIC and Birth Date to access the system.")
 
     nic = st.text_input("NIC")
-    birthdate = st.text_input("BirthDate (YYYY-MM-DD)")
+    birthdate = st.text_input("BirthDate (YYYY-MM-DD)",)
 
     if st.button("Login", use_container_width=True):
         if validate_admin(nic, birthdate):
