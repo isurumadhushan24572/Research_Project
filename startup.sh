@@ -4,6 +4,9 @@ set -e
 # Move to code folder
 cd /home/site/wwwroot
 
+# Clean old Microsoft repos (prevents debian/12 conflicts)
+rm -f /etc/apt/sources.list.d/mssql-release.list
+
 # Install MS ODBC Driver 17
 apt-get update
 apt-get install -y curl gnupg2 apt-transport-https unixodbc unixodbc-dev
