@@ -19,5 +19,5 @@ ACCEPT_EULA=Y DEBIAN_FRONTEND=noninteractive apt-get install -y msodbcsql17 || t
 if [ -f requirements.txt ]; then pip install -r requirements.txt || true; fi
 
 # Run Streamlit
-echo "🚀 Starting Streamlit app..."
+echo "Starting Streamlit app..."
 python -m streamlit run ${ENTRY_FILE:-app.py} --server.address 0.0.0.0 --server.port 8000
