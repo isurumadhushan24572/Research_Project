@@ -13,6 +13,7 @@ on:
       - main
   workflow_dispatch:
 
+# Concurrency settings
 concurrency:
   group: azure-appservice-deploy
   cancel-in-progress: false    
