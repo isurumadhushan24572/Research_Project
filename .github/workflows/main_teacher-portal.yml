@@ -5,15 +5,17 @@
 name: Build and deploy Python app to Azure Web App - Teacher-Portal
 
 
-# concurrency:
-#   group: azure-appservice-deploy
-#   cancel-in-progress: false
+
 
 on:
   push:
     branches:
       - main
   workflow_dispatch:
+
+concurrency:
+  group: azure-appservice-deploy
+  cancel-in-progress: false    
 
 jobs:
   build:
