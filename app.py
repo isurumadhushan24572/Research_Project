@@ -188,8 +188,11 @@ else:
                 else:
                     first_result = results[0]
                     location_type = first_result.get("geometry", {}).get("location_type")
+                    result_types = set(first_result.get("types", []))
                     
-                    if not set(first_result.get("types", [])) & {"street_address", "premise", "subpremise", "establishment", "route"}:
+                    if location_type not in {"ROOFTOP", "RANGE_INTERPOLATED", "GEOMETRIC_CENTER"}:
+                        st.error("❌ Address not recognized as a precise location. Please refine and try again.")
+                    elif not result_types & {"street_address", "premise", "subpremise", "establishment", "route"}:
                         st.error("❌ Address not recognized as a valid location. Please refine and try again.")
                     else:
                         validated_address = first_result["formatted_address"]
