@@ -187,43 +187,53 @@ else:
                     st.error("❌ Invalid address. Please enter a valid location.")
                 else:
                     first_result = results[0]
-                    location_type = first_result.get("geometry", {}).get("location_type")
-                    result_types = set(first_result.get("types", []))
-                    
-                    if location_type not in {"ROOFTOP", "RANGE_INTERPOLATED", "GEOMETRIC_CENTER"}:
-                        st.error("❌ Address not recognized as a precise location. Please refine and try again.")
-                    elif not result_types & {"street_address", "premise", "subpremise", "establishment", "route"}:
-                        st.error("❌ Address not recognized as a valid location. Please refine and try again.")
+                    country_component = next(
+                        (
+                            component
+                            for component in first_result.get("address_components", [])
+                            if "country" in component.get("types", [])
+                        ),
+                        None,
+                    )
+                    if not country_component or country_component.get("short_name") != "LK":
+                        st.error("❌ Address must be located in Sri Lanka. Please refine and try again.")
                     else:
-                        validated_address = first_result["formatted_address"]
-
-                        # ✅ Unique filename per NIC per month
-                        current_month = datetime.now().strftime("%Y%m")
-                        nic_safe = re.sub(r'[^a-zA-Z0-9_-]', '_', st.session_state.teacher_nic)
-                        file_name = f"{nic_safe}_{current_month}.parquet"
-                        bronze_path = f"abfs://{BRONZE_CONTAINER}@{AZURE_STORAGE_ACCOUNT}.dfs.core.windows.net/Vacancy_Details/"
-
-                        fs = adlfs.AzureBlobFileSystem(
-                            account_name=AZURE_STORAGE_ACCOUNT,
-                            account_key=AZURE_STORAGE_KEY
-                        )
-
-                        if fs.exists(f"{bronze_path}{file_name}"):
-                            st.error("❌ You have already submitted this month. Duplicate submissions are not allowed.")
+                        location_type = first_result.get("geometry", {}).get("location_type")
+                        result_types = set(first_result.get("types", []))
+                        if location_type not in {"ROOFTOP", "RANGE_INTERPOLATED", "GEOMETRIC_CENTER"}:
+                            st.error("❌ Address not recognized as a precise location. Please refine and try again.")
+                        elif not result_types & {"street_address", "premise", "subpremise", "establishment", "route"}:
+                            st.error("❌ Address not recognized as a valid location. Please refine and try again.")
                         else:
-                            # ✅ Save to Parquet
-                            data = pd.DataFrame([{
-                                "NIC": st.session_state.teacher_nic,
-                                "Teacher_Name": st.session_state.teacher_name,
-                                "Section": ",".join(section),
-                                "Subjects": ",".join(st.session_state.selected_subjects),
-                                "Validated_Address": validated_address,
-                                "School_Preferences": ",".join(school_choices),
-                                "Reason": Reason,
-                                "Submitted_At": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                            }])
+                            validated_address = first_result["formatted_address"]
 
-                            data.to_parquet(f"{bronze_path}{file_name}", index=False, filesystem=fs)
+                            # ✅ Unique filename per NIC per month
+                            current_month = datetime.now().strftime("%Y%m")
+                            nic_safe = re.sub(r'[^a-zA-Z0-9_-]', '_', st.session_state.teacher_nic)
+                            file_name = f"{nic_safe}_{current_month}.parquet"
+                            bronze_path = f"abfs://{BRONZE_CONTAINER}@{AZURE_STORAGE_ACCOUNT}.dfs.core.windows.net/Vacancy_Details/"
 
-                            st.success("✅ Form submitted and saved successfully!")
+                            fs = adlfs.AzureBlobFileSystem(
+                                account_name=AZURE_STORAGE_ACCOUNT,
+                                account_key=AZURE_STORAGE_KEY
+                            )
+
+                            if fs.exists(f"{bronze_path}{file_name}"):
+                                st.error("❌ You have already submitted this month. Duplicate submissions are not allowed.")
+                            else:
+                                # ✅ Save to Parquet
+                                data = pd.DataFrame([{
+                                    "NIC": st.session_state.teacher_nic,
+                                    "Teacher_Name": st.session_state.teacher_name,
+                                    "Section": ",".join(section),
+                                    "Subjects": ",".join(st.session_state.selected_subjects),
+                                    "Validated_Address": validated_address,
+                                    "School_Preferences": ",".join(school_choices),
+                                    "Reason": Reason,
+                                    "Submitted_At": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                                }])
+
+                                data.to_parquet(f"{bronze_path}{file_name}", index=False, filesystem=fs)
+
+                                st.success("✅ Form submitted and saved successfully!")
 
