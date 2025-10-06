@@ -182,39 +182,45 @@ else:
                 url = "https://maps.googleapis.com/maps/api/geocode/json"
                 params = {"address": address, "key": GOOGLE_API_KEY}
                 response = requests.get(url, params=params).json()
-
-                if response["status"] != "OK":
+                results = response.get("results", [])
+                if response.get("status") != "OK" or not results:
                     st.error("❌ Invalid address. Please enter a valid location.")
                 else:
-                    validated_address = response["results"][0]["formatted_address"]
-
-                    # ✅ Unique filename per NIC per month
-                    current_month = datetime.now().strftime("%Y%m")
-                    nic_safe = re.sub(r'[^a-zA-Z0-9_-]', '_', st.session_state.teacher_nic)
-                    file_name = f"{nic_safe}_{current_month}.parquet"
-                    bronze_path = f"abfs://{BRONZE_CONTAINER}@{AZURE_STORAGE_ACCOUNT}.dfs.core.windows.net/Vacancy_Details/"
-
-                    fs = adlfs.AzureBlobFileSystem(
-                        account_name=AZURE_STORAGE_ACCOUNT,
-                        account_key=AZURE_STORAGE_KEY
-                    )
-
-                    if fs.exists(f"{bronze_path}{file_name}"):
-                        st.error("❌ You have already submitted this month. Duplicate submissions are not allowed.")
-                    else:
-                        # ✅ Save to Parquet
-                        data = pd.DataFrame([{
-                            "NIC": st.session_state.teacher_nic,
-                            "Teacher_Name": st.session_state.teacher_name,
-                            "Section": ",".join(section),
-                            "Subjects": ",".join(st.session_state.selected_subjects),
-                            "Validated_Address": validated_address,
-                            "School_Preferences": ",".join(school_choices),
-                            "Reason": Reason,
-                            "Submitted_At": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                        }])
-
-                        data.to_parquet(f"{bronze_path}{file_name}", index=False, filesystem=fs)
-
-                        st.success("✅ Form submitted and saved successfully!")
+                    first_result = results[0]
+                    location_type = first_result.get("geometry", {}).get("location_type")
                     
+                    if not set(first_result.get("types", [])) & {"street_address", "premise", "subpremise", "establishment", "route"}:
+                        st.error("❌ Address not recognized as a valid location. Please refine and try again.")
+                    else:
+                        validated_address = first_result["formatted_address"]
+
+                        # ✅ Unique filename per NIC per month
+                        current_month = datetime.now().strftime("%Y%m")
+                        nic_safe = re.sub(r'[^a-zA-Z0-9_-]', '_', st.session_state.teacher_nic)
+                        file_name = f"{nic_safe}_{current_month}.parquet"
+                        bronze_path = f"abfs://{BRONZE_CONTAINER}@{AZURE_STORAGE_ACCOUNT}.dfs.core.windows.net/Vacancy_Details/"
+
+                        fs = adlfs.AzureBlobFileSystem(
+                            account_name=AZURE_STORAGE_ACCOUNT,
+                            account_key=AZURE_STORAGE_KEY
+                        )
+
+                        if fs.exists(f"{bronze_path}{file_name}"):
+                            st.error("❌ You have already submitted this month. Duplicate submissions are not allowed.")
+                        else:
+                            # ✅ Save to Parquet
+                            data = pd.DataFrame([{
+                                "NIC": st.session_state.teacher_nic,
+                                "Teacher_Name": st.session_state.teacher_name,
+                                "Section": ",".join(section),
+                                "Subjects": ",".join(st.session_state.selected_subjects),
+                                "Validated_Address": validated_address,
+                                "School_Preferences": ",".join(school_choices),
+                                "Reason": Reason,
+                                "Submitted_At": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                            }])
+
+                            data.to_parquet(f"{bronze_path}{file_name}", index=False, filesystem=fs)
+
+                            st.success("✅ Form submitted and saved successfully!")
+
