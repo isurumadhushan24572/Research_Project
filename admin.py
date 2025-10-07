@@ -597,7 +597,7 @@ def render_sidebar():
 # ---------------------------
 st.set_page_config(
     page_title="Teacher Transfer Admin Portal",
-    page_icon="🛡️",
+    page_icon="👨‍⚖️",
     layout="wide",
     initial_sidebar_state="expanded",
 )
