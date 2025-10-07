@@ -236,7 +236,7 @@ else:
             )
 
             if fs.exists(f"{bronze_path}{file_name}"):
-                st.error("❌ You have already submitted this month. Duplicate submissions are not allowed.")
+                st.error("❌ You have already submitted this month. Duplicate submissions are not allowed..")
             else:
                 data = pd.DataFrame([{
                     "NIC": st.session_state.teacher_nic,
