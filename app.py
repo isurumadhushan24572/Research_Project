@@ -7,6 +7,7 @@ from datetime import datetime
 import adlfs
 import re
 import requests
+import difflib  # NEW: used for address similarity checking
 
 # --- Load env vars ---
 load_dotenv()
@@ -75,10 +76,6 @@ def get_schools():
 
 # --- Helper: get subject list (optimized) ---
 def get_subjects(section: list):
-    """
-    Fetch distinct subjects for the selected section(s),
-    ordered by SECTION then SUBJECT.
-    """
     if engine is None or not section:
         return {}
     try:
@@ -88,15 +85,11 @@ def get_subjects(section: list):
                 FROM gold.ext_subject
                 WHERE SECTION IN :section
                 ORDER BY SECTION, SUBJECT
-            """).bindparams(
-                bindparam("section", expanding=True)
-            )
-            result = conn.execute(query,{"section": section}).fetchall()
-
+            """).bindparams(bindparam("section", expanding=True))
+            result = conn.execute(query, {"section": section}).fetchall()
             subjects_by_section = {}
             for row in result:
                 subjects_by_section.setdefault(row.SECTION, []).append(row.SUBJECT)
-
             return subjects_by_section
     except Exception as e:
         st.error(f"Error loading subject: {e}")
@@ -128,32 +121,23 @@ else:
 
     schools = get_schools()
 
-    
     # --- Section logic ---
-    
-    section_options = ["Primary", "Secondary", "A/L_General", "A/L_Arts", "A/L_Commerce", "A/L_Technology", "A/L_Science"]
+    section_options = ["Primary", "Secondary", "A/L_General", "A/L_Arts",
+                       "A/L_Commerce", "A/L_Technology", "A/L_Science"]
     section = st.multiselect("Select Section(s)", section_options)
 
-    # --- Subjects (grouped by section with multiselects) ---
+    # --- Subjects (grouped by section) ---
     subjects_by_section = get_subjects(section)
-    # st.subheader("Select Subjects")
     selected_subjects = []
 
     for sec, subs in subjects_by_section.items():
-        chosen = st.multiselect(
-            f"{sec} Subjects",
-            options=subs,
-            default=[],
-            key=f"subj_multi_{sec}"
-        )
+        chosen = st.multiselect(f"{sec} Subjects", options=subs, default=[], key=f"subj_multi_{sec}")
         selected_subjects.extend(chosen)
 
     st.session_state.selected_subjects = selected_subjects
 
     with st.form("submission_form"):
-    # --- Other form fields ---
         address = st.text_input("Address")
-        # notes_options = ["Health", "Hardship", "Family", "Personal"]
         Reason = st.text_area("Reasons for transfer")
 
         # --- School Preferences ---
@@ -167,76 +151,103 @@ else:
             if choice != "-- None --":
                 school_choices.append(choice)
 
-        # Form submit button
         submitted = st.form_submit_button("Submit")
 
         if submitted:
+            # --- Basic validation ---
             if not st.session_state.selected_subjects or not address or not Reason.strip():
                 st.error("❌ Please fill all required fields before submitting.")
-            elif len(school_choices) == 0:
+                st.stop()
+            if len(school_choices) == 0:
                 st.error("❌ Please select at least one school.")
-            elif len(school_choices) != len(set(school_choices)):
+                st.stop()
+            if len(school_choices) != len(set(school_choices)):
                 st.error("❌ Duplicate schools selected. Each preference must be unique.")
+                st.stop()
+
+            # ✅ Strict Sri Lanka address validation
+            url = "https://maps.googleapis.com/maps/api/geocode/json"
+            params = {
+                "address": address,
+                "key": GOOGLE_API_KEY,
+                "components": "country:LK",
+                "region": "LK"
+            }
+            response = requests.get(url, params=params).json()
+
+            if response.get("status") != "OK":
+                st.error("❌ Google could not validate the address. Please enter a more complete Sri Lankan address.")
+                st.stop()
+
+            results = response.get("results", [])
+            if not results:
+                st.error("❌ No results found. Please enter a valid Sri Lankan address (e.g., city, road, or area).")
+                st.stop()
+
+            first_result = results[0]
+            formatted_address = first_result.get("formatted_address", "")
+            address_components = first_result.get("address_components", [])
+            geometry = first_result.get("geometry", {}).get("location", {})
+
+            # Extract country
+            country_component = next(
+                (c for c in address_components if "country" in c.get("types", [])),
+                {}
+            )
+            country_code = country_component.get("short_name")
+
+            # Validate location details
+            lat, lng = geometry.get("lat"), geometry.get("lng")
+
+            if country_code != "LK":
+                st.error(f"❌ This address is located in another country ({country_code}). Please enter a Sri Lankan address.")
+                st.stop()
+            if lat is None or lng is None:
+                st.error("❌ Unable to determine exact location. Please refine your address.")
+                st.stop()
+            if not (5.9 <= lat <= 9.9 and 79.4 <= lng <= 82.1):
+                st.error("❌ Address coordinates are outside Sri Lanka’s boundaries. Please enter a valid Sri Lankan address.")
+                st.stop()
+
+            # Text similarity check
+            similarity = difflib.SequenceMatcher(None, address.lower(), formatted_address.lower()).ratio()
+            if similarity < 0.25:
+                st.error("❌ The entered text doesn’t match any known Sri Lankan location. Please check your spelling or enter a clearer address.")
+                st.stop()
+
+            # Ensure formatted address ends with Sri Lanka
+            if not formatted_address.lower().strip().endswith("sri lanka"):
+                st.error("❌ Address must be within Sri Lanka. Please enter a valid Sri Lankan address.")
+                st.stop()
+
+            # All good ✅
+            validated_address = formatted_address
+            st.success(f"✅ Validated Address: {validated_address}")
+
+            # --- Save to Azure Blob ---
+            current_month = datetime.now().strftime("%Y%m")
+            nic_safe = re.sub(r'[^a-zA-Z0-9_-]', '_', st.session_state.teacher_nic)
+            file_name = f"{nic_safe}_{current_month}.parquet"
+            bronze_path = f"abfs://{BRONZE_CONTAINER}@{AZURE_STORAGE_ACCOUNT}.dfs.core.windows.net/Vacancy_Details/"
+
+            fs = adlfs.AzureBlobFileSystem(
+                account_name=AZURE_STORAGE_ACCOUNT,
+                account_key=AZURE_STORAGE_KEY
+            )
+
+            if fs.exists(f"{bronze_path}{file_name}"):
+                st.error("❌ You have already submitted this month. Duplicate submissions are not allowed.")
             else:
- 
+                data = pd.DataFrame([{
+                    "NIC": st.session_state.teacher_nic,
+                    "Teacher_Name": st.session_state.teacher_name,
+                    "Section": ",".join(section),
+                    "Subjects": ",".join(st.session_state.selected_subjects),
+                    "Validated_Address": validated_address,
+                    "School_Preferences": ",".join(school_choices),
+                    "Reason": Reason,
+                    "Submitted_At": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                }])
 
-                # ✅ Validate address using Google Maps API
-                url = "https://maps.googleapis.com/maps/api/geocode/json"
-                params = {"address": address, "key": GOOGLE_API_KEY, "components": "country:LK","region": "LK"}
-                response = requests.get(url, params=params).json()
-                results = response.get("results", [])
-                if response.get("status") != "OK" or not results:
-                    st.error("❌ Invalid address. Please enter a valid location.")
-                else:
-                    first_result = results[0]
-                    country_component = next(
-                        (
-                            component
-                            for component in first_result.get("address_components", [])
-                            if "country" in component.get("types", [])
-                        ),
-                        None,
-                    )
-                    if not country_component or country_component.get("short_name") != "LK":
-                        st.error("❌ Address must be located in Sri Lanka. Please refine and try again.")
-                    else:
-                        location_type = first_result.get("geometry", {}).get("location_type")
-                        result_types = set(first_result.get("types", []))
-                        # if location_type not in {"ROOFTOP", "RANGE_INTERPOLATED", "GEOMETRIC_CENTER"}:
-                        #     st.error("❌ Address not recognized as a precise location. Please refine and try again.")
-                        if not result_types & {"street_address", "premise", "subpremise", "establishment", "route"}:
-                            st.error("❌ Address not recognized as a valid location. Please refine and try again.")
-                        else:
-                            validated_address = first_result["formatted_address"]
-                
-
-                            # ✅ Unique filename per NIC per month
-                            current_month = datetime.now().strftime("%Y%m")
-                            nic_safe = re.sub(r'[^a-zA-Z0-9_-]', '_', st.session_state.teacher_nic)
-                            file_name = f"{nic_safe}_{current_month}.parquet"
-                            bronze_path = f"abfs://{BRONZE_CONTAINER}@{AZURE_STORAGE_ACCOUNT}.dfs.core.windows.net/Vacancy_Details/"
-
-                            fs = adlfs.AzureBlobFileSystem(
-                                account_name=AZURE_STORAGE_ACCOUNT,
-                                account_key=AZURE_STORAGE_KEY
-                            )
-
-                            if fs.exists(f"{bronze_path}{file_name}"):
-                                st.error("❌ You have already submitted this month. Duplicate submissions are not allowed.")
-                            else:
-                                # ✅ Save to Parquet
-                                data = pd.DataFrame([{
-                                    "NIC": st.session_state.teacher_nic,
-                                    "Teacher_Name": st.session_state.teacher_name,
-                                    "Section": ",".join(section),
-                                    "Subjects": ",".join(st.session_state.selected_subjects),
-                                    "Validated_Address": validated_address,
-                                    "School_Preferences": ",".join(school_choices),
-                                    "Reason": Reason,
-                                    "Submitted_At": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                                }])
-
-                                data.to_parquet(f"{bronze_path}{file_name}", index=False, filesystem=fs)
-
-                                st.success("✅ Form submitted and saved successfully!")
-
+                data.to_parquet(f"{bronze_path}{file_name}", index=False, filesystem=fs)
+                st.success("✅ Form submitted and saved successfully!")
