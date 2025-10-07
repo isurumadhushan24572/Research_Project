@@ -208,3 +208,7 @@ __marimo__/
 
 # ipynb Files
 *.ipynb
+
+# Add Portal_Guideline Folder
+
+Portal_Guideline/
