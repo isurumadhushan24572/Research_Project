@@ -182,7 +182,7 @@ else:
 
                 # ✅ Validate address using Google Maps API
                 url = "https://maps.googleapis.com/maps/api/geocode/json"
-                params = {"address": address, "key": GOOGLE_API_KEY, "components": "country:LK"}
+                params = {"address": address, "key": GOOGLE_API_KEY, "components": "country:LK","region": "LK"}
                 response = requests.get(url, params=params).json()
                 results = response.get("results", [])
                 if response.get("status") != "OK" or not results:
