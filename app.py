@@ -178,6 +178,8 @@ else:
             elif len(school_choices) != len(set(school_choices)):
                 st.error("❌ Duplicate schools selected. Each preference must be unique.")
             else:
+ 
+
                 # ✅ Validate address using Google Maps API
                 url = "https://maps.googleapis.com/maps/api/geocode/json"
                 params = {"address": address, "key": GOOGLE_API_KEY, "components": "country:LK"}
@@ -200,12 +202,13 @@ else:
                     else:
                         location_type = first_result.get("geometry", {}).get("location_type")
                         result_types = set(first_result.get("types", []))
-                        if location_type not in {"ROOFTOP", "RANGE_INTERPOLATED", "GEOMETRIC_CENTER"}:
-                            st.error("❌ Address not recognized as a precise location. Please refine and try again.")
-                        elif not result_types & {"street_address", "premise", "subpremise", "establishment", "route"}:
+                        # if location_type not in {"ROOFTOP", "RANGE_INTERPOLATED", "GEOMETRIC_CENTER"}:
+                        #     st.error("❌ Address not recognized as a precise location. Please refine and try again.")
+                        if not result_types & {"street_address", "premise", "subpremise", "establishment", "route"}:
                             st.error("❌ Address not recognized as a valid location. Please refine and try again.")
                         else:
                             validated_address = first_result["formatted_address"]
+                
 
                             # ✅ Unique filename per NIC per month
                             current_month = datetime.now().strftime("%Y%m")
