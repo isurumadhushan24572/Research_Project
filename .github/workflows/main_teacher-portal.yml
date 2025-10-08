@@ -14,7 +14,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read #This is required for actions/checkout
+      contents: read # Required for actions/checkout
 
     steps:
       - uses: actions/checkout@v4
@@ -32,7 +32,7 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
         
-      # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
+      # Optional: Add step to run tests here (e.g., pytest)
 
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v4
@@ -46,8 +46,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read #This is required for actions/checkout
+      id-token: write  # Required for OIDC authentication
+      contents: read
 
     steps:
       - name: Download artifact from build job
@@ -62,10 +62,10 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_A05031262DCF4C3C941A2DCB0EA2B848 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_F81DBE6315314DD5B853E2D95F9ECF7B }}
 
-      - name: 'Deploy to Azure Web App'
+      - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         id: deploy-to-webapp
         with:
           app-name: 'Teacher-Portal'
           slot-name: 'Production'
-          
+          package: .   # ✅ CRITICAL: ensures your built app gets deployed
