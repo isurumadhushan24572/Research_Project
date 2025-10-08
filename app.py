@@ -239,7 +239,7 @@ def display_login_page():
     with col2:
         st.markdown("""
             <div style="text-align: center; padding: 20px;">
-                <h1 style="color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.1);">🔐 Teacher Login Portal</h1>
+                <h1 style="color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.1);">Teacher Login Portal</h1>
             </div>
         """, unsafe_allow_html=True)
         
