@@ -69,3 +69,4 @@ jobs:
           app-name: 'Teacher-Portal'
           slot-name: 'Production'
           package: .   # ✅ CRITICAL: ensures your built app gets deployed
+          clean: true
