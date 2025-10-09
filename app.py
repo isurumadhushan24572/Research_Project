@@ -235,7 +235,7 @@ def apply_local_background(image_name: str = "Image/background_1.png"):
 
 # --- Two-stage login UI ---
 def login_flow():
-    st.header("Teacher Login (OTP Secured)")
+    st.header("Teacher Login")
     if st.session_state.login_stage == "credentials":
         with st.form("credentials_form"):
             nic = st.text_input("NIC", placeholder="National ID Number")
