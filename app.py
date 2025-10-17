@@ -210,6 +210,14 @@ def set_custom_styles():
         <style>
         .stForm {background-color: rgba(0,0,0,0.75); padding:24px; border-radius:14px;}
         .otp-info {color:#63b3ed; font-size:0.9rem;}
+        
+        /* Hide scrollbars (keep scrolling enabled) */
+        /* Chrome, Safari, Edge */
+        ::-webkit-scrollbar { width: 0px; height: 0px; background: transparent; }
+        /* Firefox */
+        html, body { scrollbar-width: none; }
+        /* IE/Edge Legacy */
+        body { -ms-overflow-style: none; }
         </style>
         """,
         unsafe_allow_html=True,
