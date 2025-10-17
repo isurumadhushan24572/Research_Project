@@ -351,6 +351,64 @@ def submission_page():
             if len(school_choices) != len(set(school_choices)):
                 st.error("Duplicate schools detected.")
                 st.stop()
+            
+            # ✅ Strict Sri Lanka address validation
+            url = "https://maps.googleapis.com/maps/api/geocode/json"
+            params = {
+                "address": address,
+                "key": GOOGLE_API_KEY,
+                "components": "country:LK",
+                "region": "LK"
+            }
+            response = requests.get(url, params=params).json()
+
+            if response.get("status") != "OK":
+                st.error("❌ Google could not validate the address. Please enter a more complete Sri Lankan address.")
+                st.stop()
+
+            results = response.get("results", [])
+            if not results:
+                st.error("❌ No results found. Please enter a valid Sri Lankan address (e.g., city, road, or area).")
+                st.stop()
+
+            first_result = results[0]
+            formatted_address = first_result.get("formatted_address", "")
+            address_components = first_result.get("address_components", [])
+            geometry = first_result.get("geometry", {}).get("location", {})
+
+            # Extract country
+            country_component = next(
+                (c for c in address_components if "country" in c.get("types", [])),
+                {}
+            )
+            country_code = country_component.get("short_name")
+
+            # Validate location details
+            lat, lng = geometry.get("lat"), geometry.get("lng")
+
+            if country_code != "LK":
+                st.error(f"❌ This address is located in another country ({country_code}). Please enter a Sri Lankan address.")
+                st.stop()
+            if lat is None or lng is None:
+                st.error("❌ Unable to determine exact location. Please refine your address.")
+                st.stop()
+            if not (5.9 <= lat <= 9.9 and 79.4 <= lng <= 82.1):
+                st.error("❌ Address coordinates are outside Sri Lanka's boundaries. Please enter a valid Sri Lankan address.")
+                st.stop()
+
+            # Text similarity check
+            similarity = difflib.SequenceMatcher(None, address.lower(), formatted_address.lower()).ratio()
+            if similarity < 0.25:
+                st.error("❌ The entered text doesn't match any known Sri Lankan location. Please check your spelling or enter a clearer address.")
+                st.stop()
+
+            # Ensure formatted address ends with Sri Lanka
+            if not formatted_address.lower().strip().endswith("sri lanka"):
+                st.error("❌ Address must be within Sri Lanka. Please enter a valid Sri Lankan address.")
+                st.stop()
+
+            # All good ✅
+            validated_address = formatted_address    
             # (Skipping address validation for brevity; reuse from original if needed)
             current_month = datetime.now().strftime("%Y%m")
             nic_safe = re.sub(r'[^a-zA-Z0-9_-]', '_', st.session_state.teacher_nic)
@@ -366,6 +424,7 @@ def submission_page():
                         "Teacher_Name": st.session_state.teacher_name,
                         "Section": ",".join(section),
                         "Subjects": ",".join(selected_subjects),
+                        "Validated_Address": validated_address,
                         "School_Preferences": ",".join(school_choices),
                         "Reason": reason,
                         "Submitted_At": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
