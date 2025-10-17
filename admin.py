@@ -582,7 +582,7 @@ def render_sidebar():
         if st.button("Log out", use_container_width=True):
             st.session_state.logged_in = False
             st.session_state.nic = None
-            st.experimental_rerun()
+            st.rerun()
 
         st.markdown(
             """
