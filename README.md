@@ -3,9 +3,9 @@ Teacher Transfer Management System
 This repository contains a Streamlit-based Teacher Transfer Management System with two primary applications:
 
 - `app.py` — Teacher Portal (teacher login and transfer submission)  
-  ![Teacher Portal](QR/Teacher_Portal.png)
+  ![Teacher Portal](QR/Teacher_20251017_184333.png)
 - `admin.py` — Admin Dashboard (admin login, KPIs, matching, exports)  
-  ![Admin Dashboard](QR/Admin_Portal.png)
+  ![Admin Dashboard](QR/Admin_20251017_184244.png)
 
 ## Overview
 
