@@ -483,10 +483,13 @@ def render_dashboard():
 
 
 def render_matching():
-    st.markdown("<div class='glass-card main-card'>", unsafe_allow_html=True)
-    st.markdown("<div class='section-title'>🤝 Teacher Transfer Matching</div>", unsafe_allow_html=True)
+    # Open a single glass-card wrapper so the border applies to the whole section
     st.markdown(
-        "<p style='color:#cbd5f5; margin-bottom: 1.5rem;'>Explore reciprocal and top-ranked matches for each teacher.</p>",
+        """
+        <div class='glass-card main-card'>
+            <div class='section-title'>🤝 Teacher Transfer Matching</div>
+            <p style='color:#cbd5f5; margin-bottom: 1.5rem;'>Explore reciprocal and top-ranked matches for each teacher.</p>
+        """,
         unsafe_allow_html=True,
     )
 
@@ -552,6 +555,7 @@ def render_matching():
             use_container_width=True,
         )
 
+    # Close glass-card wrapper
     st.markdown("</div>", unsafe_allow_html=True)
 
 
