@@ -443,7 +443,7 @@ def submission_page():
                 st.balloons()
 
 # --- Page config & styling ---
-st.set_page_config(page_title="Teacher Portal OTP", page_icon="👨‍🏫", layout="centered", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="Teacher Portal", page_icon="👨‍🏫", layout="centered", initial_sidebar_state="collapsed")
 set_custom_styles()
 apply_local_background()
 

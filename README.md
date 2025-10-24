@@ -29,6 +29,11 @@ The system allows teachers to securely submit transfer requests and administrato
 	- Connects to Synapse via `pyodbc` and runs queries to compute KPIs and load tables.
 	- Provides filtering, formatting, and Excel export for vacancy and match datasets.
 
+## Documentation
+
+- Teacher Portal Guide (updated): [Portal_Guideline/Teacher_Portal_Guide.md](Portal_Guideline/Teacher_Portal_Guide.md)
+	- Covers login with NIC/Birth/Appointment Date, OTP verification (5‑minute expiry, resend), address validation rules for Sri Lanka, selecting sections/subjects, school preferences (up to 5 unique), monthly submission limit, and troubleshooting.
+
 ## Setup
 
 1. Create a Python virtual environment and activate it (Windows PowerShell):
@@ -87,6 +92,4 @@ streamlit run admin.py
 - Add CI workflow to run linting and tests on push.
 - Add a short CHANGELOG and CONTRIBUTING guide.
 
-## Contact
 
-If you need help configuring the environment or deploying the app, open an issue or contact the project owner.
