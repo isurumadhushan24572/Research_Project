@@ -10,6 +10,7 @@ import requests
 import difflib
 import base64
 from pathlib import Path
+import time
 
 # --- Load env vars ---
 load_dotenv()
@@ -51,6 +52,7 @@ for key, default in {
     "otp_expiry": None,
     "mobile_number": None,
     "login_stage": "credentials",  # credentials -> otp
+    "last_otp_sent_time": None,  # Track last OTP send time for cooldown
 }.items():
     if key not in st.session_state:
         st.session_state[key] = default
@@ -211,6 +213,16 @@ def set_custom_styles():
         .stForm {background-color: rgba(0,0,0,0.75); padding:24px; border-radius:14px;}
         .otp-info {color:#63b3ed; font-size:0.9rem;}
         
+        /* Style for disabled button - black background with curved border and no border color */
+        button[disabled] {
+            color: #FFFFFF !important;
+            font-weight: normal !important;
+            opacity: 1 !important;
+            background-color: #000000 !important;
+            border: none !important;
+            border-radius: 15px !important;
+        }
+        
         /* Hide scrollbars (keep scrolling enabled) */
         /* Chrome, Safari, Edge */
         ::-webkit-scrollbar { width: 0px; height: 0px; background: transparent; }
@@ -281,6 +293,7 @@ def login_flow():
                 st.session_state.teacher_title = teacher["title"]
                 st.session_state.otp_sent = True
                 st.session_state.login_stage = "otp"
+                st.session_state.last_otp_sent_time = datetime.utcnow()  # Track OTP send time
                 st.success("✅ OTP sent to your registered mobile number.")
                 st.rerun()
     elif st.session_state.login_stage == "otp":
@@ -314,14 +327,31 @@ def login_flow():
                 st.session_state.otp_expiry = None
                 st.session_state.login_stage = "authenticated"
                 st.rerun()
-        if st.button("Resend OTP"):
-            ok, result = send_textlk_otp(st.session_state.mobile_number, length=6)
-            if ok:
-                st.session_state.otp_code = result
-                st.session_state.otp_expiry = datetime.utcnow() + timedelta(minutes=5)
-                st.info("A new OTP has been sent.")
-            else:
-                st.error(f"Failed to resend OTP: {result}")
+        
+        # Check if resend is allowed (1-minute cooldown)
+        can_resend = True
+        remaining_seconds = 0
+        if st.session_state.last_otp_sent_time:
+            time_since_last_otp = datetime.utcnow() - st.session_state.last_otp_sent_time
+            if time_since_last_otp < timedelta(minutes=1):
+                can_resend = False
+                remaining_seconds = 60 - int(time_since_last_otp.total_seconds())
+        
+        if can_resend:
+            if st.button("Resend OTP"):
+                ok, result = send_textlk_otp(st.session_state.mobile_number, length=6)
+                if ok:
+                    st.session_state.otp_code = result
+                    st.session_state.otp_expiry = datetime.utcnow() + timedelta(minutes=5)
+                    st.session_state.last_otp_sent_time = datetime.utcnow()  # Update last sent time
+                    st.rerun()
+                else:
+                    st.error(f"Failed to resend OTP: {result}")
+        else:
+            st.button(f"Resend OTP (wait {remaining_seconds}s)", disabled=True)
+            # Auto-refresh every second to update countdown
+            time.sleep(1)
+            st.rerun()
 
 # --- Original submission page trimmed for brevity (reuse from main app) ---
 def submission_page():
